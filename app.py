@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, Response, jsonify
+from flask import Flask, request, redirect, Response, json, jsonify
 
 app = Flask(__name__)
 
@@ -64,17 +64,25 @@ def add_book():
         # Set response parameters.
         response = Response(
                     "New Book Added!", 
-                    201, 
+                    status=201, 
                     mimetype='application/json')
         # Set response headers.
         response.headers['Location'] = "/books/" + str(new_book['isbn'])
         return response
     else: 
-        return jsonify({
-            "Error": "Invalid book format."
-        })
-
-    
+        # Create invalid book message.
+        invalidBookOjbectErrorMsg = {
+            "Error": "Invalid book format.",
+            "helpString": "Book data should be in format of {'name': '<string>','price': '<int>','isbn': '<string>'}"
+        }
+        # Set error response.
+        response = Response(
+            json.dumps(invalidBookOjbectErrorMsg),
+            status=400,
+            mimetype='application/json'
+        )
+        return response
+ 
 # Server running.....
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
