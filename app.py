@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, jsonify
+from flask import Flask, request, redirect, Response, jsonify
 
 app = Flask(__name__)
 
@@ -61,10 +61,14 @@ def add_book():
             "isbn": book_data['isbn']
         }
         books.append(new_book)
-        #return redirect("http://localhost:5000/books", code=302)
-        return jsonify({
-            "New Book": new_book
-        })
+        # Set response parameters.
+        response = Response(
+                    "New Book Added!", 
+                    201, 
+                    mimetype='application/json')
+        # Set response headers.
+        response.headers['Location'] = "/books/" + str(new_book['isbn'])
+        return response
     else: 
         return jsonify({
             "Error": "Invalid book format."
