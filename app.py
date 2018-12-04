@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, request, redirect, jsonify
 
 app = Flask(__name__)
 
@@ -14,6 +14,13 @@ books = [
         "isbn": 9880
     }
 ]
+
+# Function to check validity of book object.
+def validBookObject(bookObject):
+    if ("name" in bookObject and "price" in bookObject and "isbn" in bookObject):
+        return True
+    else:
+        return False
 
 # GET /
 @app.route('/')
@@ -40,6 +47,30 @@ def get_books():
         "books": books
     })
 
+# POST /books - add a new book.
+@app.route('/books', methods=['POST'])
+def add_book():
+    book_data = request.get_json()
+    # Check if valid.
+    valid = validBookObject(book_data)
+    if valid:
+        # If valid only use revelant data.
+        new_book = {
+            "name": book_data['name'],
+            "price": book_data['price'],
+            "isbn": book_data['isbn']
+        }
+        books.append(new_book)
+        #return redirect("http://localhost:5000/books", code=302)
+        return jsonify({
+            "New Book": new_book
+        })
+    else: 
+        return jsonify({
+            "Error": "Invalid book format."
+        })
+
+    
 # Server running.....
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
