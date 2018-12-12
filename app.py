@@ -14,7 +14,7 @@ books = [
         "isbn": 9880
     }
 ]
-
+# TODO fix all responses.
 # Function to check validity of book object.
 def validBookObject(bookObject):
     if ("name" in bookObject and "price" in bookObject and "isbn" in bookObject):
@@ -83,6 +83,11 @@ def add_book():
         )
         return response
  
+# Put route to update a book.
+@app.rout('/books/<int:isbn>', methods=['PUT'])
+def replace_book(isbn):
+    return jsonify(request.get_json())
+
 # Server running.....
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
