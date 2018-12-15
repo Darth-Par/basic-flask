@@ -22,6 +22,13 @@ def validBookObject(bookObject):
     else:
         return False
 
+# Function to check valid PUT object data.
+def validPUTData(PUTObject):
+    if ("name" in PUTObject and "price" in PUTObject):
+        return True
+    else: 
+        return False
+
 # GET /
 @app.route('/')
 def hello_world():
@@ -89,37 +96,52 @@ def add_book():
 @app.route('/books/<int:isbn>', methods=['PUT'])
 def replace_book(isbn):
     request_data = request.get_json()
-    book_update = {
-        'name': request_data['name'],
-        'price': request_data['price'],
-        'isbn': isbn
-    }
-    # Iterate over books list.  If a match is found replace that element in the list.
-    for idx, book in enumerate(books):
-        if book['isbn'] == isbn:
-            del books[idx]
-            books.insert(idx, book_update)
-            # Set response parameters. 204 for successful put.
-            response = Response(
-                        "", 
-                        status=204, 
-                        mimetype='application/json')
-            # Set response headers.
-            response.headers['Location'] = "/books/" + str(book_update['isbn'])
-            return response
-        elif (idx + 1) == len(books): 
-            # Create invalid book isbn message.
-            invalidBookIsbnErrorMsg = {
-                "Error": "That book doesn't exist.  Please check the isbn.",
-                "helpString": "Verify that the isbn number exists.",
-            }
-            # Set error response.
-            response = Response(
-                json.dumps(invalidBookIsbnErrorMsg),
-                status=400,
-                mimetype='application/json'
-            )
-            return response
+    valid = validPUTData(request_data)
+    if valid:
+        book_update = {
+            'name': request_data['name'],
+            'price': request_data['price'],
+            'isbn': isbn
+        }
+        # Iterate over books list.  If a match is found replace that element in the list.
+        for idx, book in enumerate(books):
+            if book['isbn'] == isbn:
+                del books[idx]
+                books.insert(idx, book_update)
+                # Set response parameters. 204 for successful put.
+                response = Response(
+                            "", 
+                            status=204, 
+                            mimetype='application/json')
+                # Set response headers.
+                response.headers['Location'] = "/books/" + str(book_update['isbn'])
+                return response
+            elif (idx + 1) == len(books): 
+                # Create invalid book isbn message.
+                invalidBookIsbnErrorMsg = {
+                    "Error": "That book doesn't exist.  Please check the isbn.",
+                    "helpString": "Verify that the isbn number exists.",
+                }
+                # Set error response.
+                response = Response(
+                    json.dumps(invalidBookIsbnErrorMsg),
+                    status=400,
+                    mimetype='application/json'
+                )
+                return response
+    else:
+        # Create invalid book message.
+        invalidBookOjbectErrorMsg = {
+            "Error": "Invalid book update format.",
+            "helpString": "Book data should be in format of {'name': '<string>','price': '<int>'}"
+        }
+        # Set error response.
+        response = Response(
+            json.dumps(invalidBookOjbectErrorMsg),
+            status=400,
+            mimetype='application/json'
+        )
+        return response
 
 # Server running.....
 if __name__ == '__main__':
