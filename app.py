@@ -29,6 +29,13 @@ def validPUTData(PUTObject):
     else: 
         return False
 
+# Function to check valid PATH object data.
+def validPATCHData(PATCHObject):
+    if ("name" in PATCHObject or "price" in PATCHObject):
+        return True
+    else: 
+        return False
+
 # GET /
 @app.route('/')
 def hello_world():
@@ -92,13 +99,13 @@ def add_book():
         )
         return response
  
-# Put route to update a book.
+# PUT route to replace a book.
 @app.route('/books/<int:isbn>', methods=['PUT'])
 def replace_book(isbn):
     request_data = request.get_json()
     valid = validPUTData(request_data)
     if valid:
-        book_update = {
+        book_replace = {
             'name': request_data['name'],
             'price': request_data['price'],
             'isbn': isbn
@@ -107,14 +114,14 @@ def replace_book(isbn):
         for idx, book in enumerate(books):
             if book['isbn'] == isbn:
                 del books[idx]
-                books.insert(idx, book_update)
+                books.insert(idx, book_replace)
                 # Set response parameters. 204 for successful put.
                 response = Response(
                             "", 
                             status=204, 
                             mimetype='application/json')
                 # Set response headers.
-                response.headers['Location'] = "/books/" + str(book_update['isbn'])
+                response.headers['Location'] = "/books/" + str(book_replace['isbn'])
                 return response
             elif (idx + 1) == len(books): 
                 # Create invalid book isbn message.
@@ -134,6 +141,57 @@ def replace_book(isbn):
         invalidBookOjbectErrorMsg = {
             "Error": "Invalid book update format.",
             "helpString": "Book data should be in format of {'name': '<string>','price': '<int>'}"
+        }
+        # Set error response.
+        response = Response(
+            json.dumps(invalidBookOjbectErrorMsg),
+            status=400,
+            mimetype='application/json'
+        )
+        return response
+
+# PATCH route to update fields in books data.
+@app.route('/books/<int:isbn>', methods=['PATCH'])
+def update_book(isbn):
+    request_data = request.get_json()
+    # Dictionary object to hold data to be updated.
+    updated_book = {}
+    # Checking which fields of data need to be updated.
+    if("name" in request_data):
+        updated_book['name'] = request_data['name']
+    if("price" in request_data):
+        updated_book['price'] = request_data['price']
+    valid = validPATCHData(updated_book)
+    if valid:
+        for idx, book in enumerate(books):
+            if book['isbn'] == isbn:
+                book.update(updated_book)
+                # Set response parameters. 204 for successful patch.
+                response = Response(
+                            "", 
+                            status=204, 
+                            mimetype='application/json')
+                # Set response headers.
+                response.headers['Location'] = "/books/" + str(isbn)
+                return response
+            elif (idx + 1) == len(books): 
+                # Create invalid book isbn message.
+                invalidBookIsbnErrorMsg = {
+                    "Error": "That book doesn't exist.  Please check the isbn.",
+                    "helpString": "Verify that the isbn number exists.",
+                }
+                # Set error response.
+                response = Response(
+                    json.dumps(invalidBookIsbnErrorMsg),
+                    status=400,
+                    mimetype='application/json'
+                )
+                return response
+    else:
+        # Create invalid book message.
+        invalidBookOjbectErrorMsg = {
+            "Error": "Invalid book update format.",
+            "helpString": "Book data should be in format of {'name': '<string>'},{'price': '<int>'}, {'name': '<string>','price': '<int>'}"
         }
         # Set error response.
         response = Response(
