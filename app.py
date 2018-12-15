@@ -84,9 +84,41 @@ def add_book():
         return response
  
 # Put route to update a book.
-@app.rout('/books/<int:isbn>', methods=['PUT'])
+@app.route('/books/<int:isbn>', methods=['PUT'])
 def replace_book(isbn):
-    return jsonify(request.get_json())
+    request_data = request.get_json()
+    book_update = {
+        'name': request_data['name'],
+        'price': request_data['price'],
+        'isbn': isbn
+    }
+    # Iterate over books list.  If a match is found replace that element in the list.
+    for book in books:
+        if book_update['isbn'] == book['isbn']:
+            idx = books.index(book)
+            del books[idx]
+            books.insert(idx, book_update)
+            # Set response parameters.
+            response = Response(
+                        "Book Updated!", 
+                        status=201, 
+                        mimetype='application/json')
+            # Set response headers.
+            response.headers['Location'] = "/books/" + str(book_update['isbn'])
+            return response
+        else: 
+            # Create invalid book isbn message.
+            invalidBookIsbnErrorMsg = {
+                "Error": "That book doesn't exist.  Please check the isbn.",
+                "helpString": "Verify that the isbn number exists."
+            }
+            # Set error response.
+            response = Response(
+                json.dumps(invalidBookIsbnErrorMsg),
+                status=400,
+                mimetype='application/json'
+            )
+            return response
 
 # Server running.....
 if __name__ == '__main__':
