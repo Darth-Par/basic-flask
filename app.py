@@ -30,14 +30,16 @@ def hello_world():
 # GET single book
 @app.route('/books/<int:isbn>')
 def get_book_by_isbn(isbn):
-    for book in books:
+    for idx, book in enumerate(books):
         if book['isbn'] == isbn:
             return jsonify({
                 "book": book
             })
-        else:
+        elif (idx + 1) == len(books):
             return jsonify({
-                "Error": "That book does not exist."
+                "Error": "That book does not exist.",
+                "input_isbn": isbn,
+                "book_isbn": book['isbn']
             })
 
 # GET /books
@@ -93,24 +95,23 @@ def replace_book(isbn):
         'isbn': isbn
     }
     # Iterate over books list.  If a match is found replace that element in the list.
-    for book in books:
-        if book_update['isbn'] == book['isbn']:
-            idx = books.index(book)
+    for idx, book in enumerate(books):
+        if book['isbn'] == isbn:
             del books[idx]
             books.insert(idx, book_update)
-            # Set response parameters.
+            # Set response parameters. 204 for successful put.
             response = Response(
-                        "Book Updated!", 
-                        status=201, 
+                        "", 
+                        status=204, 
                         mimetype='application/json')
             # Set response headers.
             response.headers['Location'] = "/books/" + str(book_update['isbn'])
             return response
-        else: 
+        elif (idx + 1) == len(books): 
             # Create invalid book isbn message.
             invalidBookIsbnErrorMsg = {
                 "Error": "That book doesn't exist.  Please check the isbn.",
-                "helpString": "Verify that the isbn number exists."
+                "helpString": "Verify that the isbn number exists.",
             }
             # Set error response.
             response = Response(
