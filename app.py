@@ -23,15 +23,8 @@ def validBookObject(bookObject):
         return False
 
 # Function to check valid PUT object data.
-def validPUTData(PUTObject):
-    if ("name" in PUTObject and "price" in PUTObject):
-        return True
-    else: 
-        return False
-
-# Function to check valid PATH object data.
-def validPATCHData(PATCHObject):
-    if ("name" in PATCHObject or "price" in PATCHObject):
+def validData(bookObject):
+    if ("name" in bookObject and "price" in bookObject):
         return True
     else: 
         return False
@@ -103,7 +96,7 @@ def add_book():
 @app.route('/books/<int:isbn>', methods=['PUT'])
 def replace_book(isbn):
     request_data = request.get_json()
-    valid = validPUTData(request_data)
+    valid = validData(request_data)
     if valid:
         book_replace = {
             'name': request_data['name'],
@@ -132,7 +125,7 @@ def replace_book(isbn):
                 # Set error response.
                 response = Response(
                     json.dumps(invalidBookIsbnErrorMsg),
-                    status=400,
+                    status=404,
                     mimetype='application/json'
                 )
                 return response
@@ -153,59 +146,80 @@ def replace_book(isbn):
 # PATCH route to update fields in books data.
 @app.route('/books/<int:isbn>', methods=['PATCH'])
 def update_book(isbn):
-    request_data = request.get_json()
-    # Dictionary object to hold data to be updated.
-    updated_book = {}
-    # Checking which fields of data need to be updated.
-    if("name" in request_data):
-        updated_book['name'] = request_data['name']
-    if("price" in request_data):
-        updated_book['price'] = request_data['price']
-    valid = validPATCHData(updated_book)
-    if valid:
-        for idx, book in enumerate(books):
-            if book['isbn'] == isbn:
-                book.update(updated_book)
-                # Set response parameters. 204 for successful patch.
-                response = Response(
-                            "", 
-                            status=204, 
-                            mimetype='application/json')
-                # Set response headers.
-                response.headers['Location'] = "/books/" + str(isbn)
-                return response
-            elif (idx + 1) == len(books): 
-                # Create invalid book isbn message.
-                invalidBookIsbnErrorMsg = {
-                    "Error": "That book doesn't exist.  Please check the isbn.",
-                    "helpString": "Verify that the isbn number exists.",
-                }
-                # Set error response.
-                response = Response(
-                    json.dumps(invalidBookIsbnErrorMsg),
-                    status=400,
-                    mimetype='application/json'
-                )
-                return response
-    else:
-        # Create invalid book message.
-        invalidBookOjbectErrorMsg = {
-            "Error": "Invalid book update format.",
-            "helpString": "Book data should be in format of {'name': '<string>'},{'price': '<int>'}, {'name': '<string>','price': '<int>'}"
-        }
-        # Set error response.
+  request_data = request.get_json()
+  # Dictionary object to hold data to be updated.
+  updated_book = {}
+  # Checking which fields of data need to be updated.
+  if("name" in request_data):
+      updated_book['name'] = request_data['name']
+  if("price" in request_data):
+      updated_book['price'] = request_data['price']
+  valid = validData(updated_book)
+  if valid:
+    for idx, book in enumerate(books):
+      if book['isbn'] == isbn:
+        book.update(updated_book)
+        # Set response parameters. 204 for successful patch.
         response = Response(
-            json.dumps(invalidBookOjbectErrorMsg),
-            status=400,
-            mimetype='application/json'
-        )
+          "", 
+          status=204, 
+          mimetype='application/json')
+        # Set response headers.
+        response.headers['Location'] = "/books/" + str(isbn)
         return response
+      elif (idx + 1) == len(books): 
+          # Create invalid book isbn message.
+          invalidBookIsbnErrorMsg = {
+              "Error": "That book doesn't exist.  Please check the isbn.",
+              "helpString": "Verify that the isbn number exists.",
+          }
+          # Set error response.
+          response = Response(
+              json.dumps(invalidBookIsbnErrorMsg),
+              status=404,
+              mimetype='application/json'
+          )
+          return response
+  else:
+      # Create invalid book message.
+      invalidBookOjbectErrorMsg = {
+          "Error": "Invalid book update format.",
+          "helpString": "Book data should be in format of {'name': '<string>'},{'price': '<int>'}, {'name': '<string>','price': '<int>'}"
+      }
+      # Set error response.
+      response = Response(
+          json.dumps(invalidBookOjbectErrorMsg),
+          status=400,
+          mimetype='application/json'
+      )
+      return response
 
 # Delete route.
 @app.route('/books/<int:isbn>', methods=['DELETE'])
 def delete_book(isbn):
-  pass
+  for idx, book in enumerate(books):
+    if book['isbn'] == isbn:
+      books.pop(idx)
+      # Set response parameters. 204 for successful patch.
+      response = Response(
+        "", 
+        status=204, 
+        mimetype='application/json')
+      return (response)
+    elif (idx + 1) == len(books):
+      # Create invalid book isbn message.
+      invalidBookIsbnErrorMsg = {
+        "Error": "That book doesn't exist.  Please check the isbn.",
+        "helpString": "Verify that the isbn number exists.",
+      }
+      # Set error response.
+      response = Response(
+        json.dumps(invalidBookIsbnErrorMsg),
+        status=404,
+        mimetype='application/json'
+      )
+      return response
 
 # Server running.....
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+  app.run(host='0.0.0.0', port=5000)
